@@ -477,6 +477,52 @@ input[type=range]{width:100%;min-width:80px;accent-color:var(--blue2);cursor:poi
   transform:scale(1.15);
   box-shadow:0 2px 8px rgba(220,38,38,.35);
 }
+
+/* ── WEIGHT SLIDER DUAL TRACK ── */
+.weight-row{position:relative}
+.w-track-wrap{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0}
+.w-track-label{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);font-family:'Syne',sans-serif;font-weight:600;letter-spacing:.04em}
+.slider-compare-wrap{position:relative;height:32px;display:flex;align-items:center}
+/* IDEAL reference bar */
+.ideal-bar-bg{position:absolute;top:50%;transform:translateY(-50%);left:0;right:0;height:6px;background:var(--fog);border-radius:100px;overflow:hidden;pointer-events:none}
+.ideal-bar-fill{height:100%;border-radius:100px;background:rgba(37,99,235,0.25);transition:width .3s}
+/* coach slider on top */
+.w-slider{position:relative;z-index:2;width:100%;accent-color:var(--blue2);cursor:pointer;background:transparent}
+.w-compare-row{display:flex;align-items:center;gap:8px;margin-top:2px}
+.w-ideal-badge{font-size:10px;font-family:'Syne',sans-serif;font-weight:700;color:rgba(37,99,235,0.7);background:rgba(37,99,235,0.08);padding:1px 7px;border-radius:100px;white-space:nowrap}
+.w-coach-val{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--blue2);min-width:20px;text-align:center}
+.w-coach-val.differs{color:#D97706}
+/* coach slider zero = grey */
+.w-slider.zero-val{accent-color:#ccc}
+
+/* ── MIN SCORE DUAL DISPLAY ── */
+.ms-item{position:relative}
+.ms-ideal-ref{font-size:9px;font-family:'Syne',sans-serif;font-weight:700;color:rgba(37,99,235,0.6);background:rgba(37,99,235,0.07);padding:1px 7px;border-radius:100px;margin-top:4px;display:inline-block}
+.ms-btn{width:32px;height:32px}
+/* selected coach btn in amber if differs from IDEAL default */
+.ms-btn.differs-sel{outline:2px solid #D97706;outline-offset:1px}
+
+/* ── ALREADY SUBMITTED LOCK ── */
+.submitted-lock{
+  background:rgba(5,150,105,.06);border:1.5px solid rgba(5,150,105,.25);
+  border-radius:var(--r);padding:18px 22px;margin-bottom:20px;
+  display:flex;align-items:center;gap:14px;
+}
+.submitted-lock .sl-icon{font-size:28px;flex-shrink:0}
+.submitted-lock h4{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#065F46}
+.submitted-lock p{font-size:12px;color:#059669;margin-top:3px;line-height:1.5}
+
+/* ── VALIDATION ERROR HIGHLIGHT ── */
+.inp.field-error{border-color:#DC2626!important;box-shadow:0 0 0 3px rgba(220,38,38,.1)!important}
+.field-err-msg{font-size:11px;color:#DC2626;margin-top:4px;font-weight:500;display:none}
+.field-err-msg.show{display:block}
+.form-error-banner{
+  background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.25);
+  border-radius:var(--rs);padding:12px 18px;margin-bottom:16px;
+  font-size:13px;color:#DC2626;display:none;font-weight:500;
+}
+.form-error-banner.show{display:block}
+
 </style>
 </head>
 <body>
@@ -635,6 +681,8 @@ const AREAS = [
 
 const ALL_TEAMS = ['Dev Cabin','Back Cabin','Front Cabin','Data Cabin','AI Cabin','Energy Optimization Cabin','UI/UX Cabin','Business','Communication','Administration'];
 
+const IDEAL_WEIGHT_DEFAULTS = {"devops": {"1": 9, "2": 9, "3": 8, "4": 4, "5": 5, "6": 6, "7": 4, "8": 8, "9": 6, "10": 7, "11": 5, "12": 5}, "cybersec": {"1": 9, "2": 9, "3": 8, "4": 4, "5": 5, "6": 5, "7": 4, "8": 7, "9": 7, "10": 6, "11": 5, "12": 5}, "backend": {"1": 9, "2": 9, "3": 8, "4": 4, "5": 6, "6": 7, "7": 5, "8": 7, "9": 6, "10": 7, "11": 5, "12": 5}, "mobile": {"1": 9, "2": 9, "3": 7, "4": 4, "5": 6, "6": 6, "7": 4, "8": 6, "9": 6, "10": 7, "11": 5, "12": 5}, "webdev": {"1": 9, "2": 9, "3": 7, "4": 4, "5": 6, "6": 6, "7": 4, "8": 6, "9": 6, "10": 7, "11": 5, "12": 5}, "dataanalyst": {"1": 9, "2": 9, "3": 8, "4": 4, "5": 5, "6": 6, "7": 4, "8": 7, "9": 6, "10": 7, "11": 5, "12": 5}, "aiengineer": {"1": 9, "2": 8, "3": 9, "4": 4, "5": 5, "6": 6, "7": 5, "8": 7, "9": 6, "10": 8, "11": 5, "12": 6}, "energy": {"1": 9, "2": 9, "3": 7, "4": 4, "5": 6, "6": 6, "7": 5, "8": 7, "9": 7, "10": 6, "11": 5, "12": 5}, "uiux": {"1": 8, "2": 8, "3": 7, "4": 5, "5": 7, "6": 8, "7": 5, "8": 7, "9": 7, "10": 8, "11": 5, "12": 6}, "bizdev": {"1": 7, "2": 8, "3": 6, "4": 5, "5": 8, "6": 9, "7": 8, "8": 8, "9": 8, "10": 7, "11": 5, "12": 7}, "strategy": {"1": 7, "2": 8, "3": 8, "4": 5, "5": 7, "6": 8, "7": 8, "8": 7, "9": 8, "10": 8, "11": 5, "12": 7}, "genrel": {"1": 6, "2": 7, "3": 6, "4": 5, "5": 9, "6": 9, "7": 8, "8": 8, "9": 9, "10": 6, "11": 5, "12": 7}, "marketing": {"1": 7, "2": 8, "3": 7, "4": 5, "5": 7, "6": 8, "7": 6, "8": 7, "9": 8, "10": 8, "11": 5, "12": 6}, "admin": {"1": 7, "2": 9, "3": 6, "4": 4, "5": 6, "6": 8, "7": 5, "8": 7, "9": 7, "10": 5, "11": 5, "12": 5}, "operations": {"1": 7, "2": 9, "3": 7, "4": 4, "5": 6, "6": 8, "7": 7, "8": 8, "9": 7, "10": 6, "11": 5, "12": 6}, "logistics": {"1": 7, "2": 9, "3": 6, "4": 4, "5": 6, "6": 7, "7": 5, "8": 7, "9": 7, "10": 5, "11": 5, "12": 5}};
+const IDEAL_MIN_DEFAULTS = {"devops": {"1": 3, "2": 3, "3": 3, "4": 2, "5": 2, "6": 2, "7": 2, "8": 2, "9": 2, "10": 2, "11": 2, "12": 2}, "cybersec": {"1": 3, "2": 3, "3": 3, "4": 2, "5": 2, "6": 2, "7": 2, "8": 2, "9": 2, "10": 2, "11": 2, "12": 2}, "backend": {"1": 3, "2": 3, "3": 3, "4": 2, "5": 2, "6": 3, "7": 2, "8": 2, "9": 2, "10": 2, "11": 2, "12": 2}, "mobile": {"1": 3, "2": 3, "3": 3, "4": 2, "5": 2, "6": 2, "7": 2, "8": 2, "9": 2, "10": 2, "11": 2, "12": 2}, "webdev": {"1": 3, "2": 3, "3": 3, "4": 2, "5": 2, "6": 2, "7": 2, "8": 2, "9": 2, "10": 2, "11": 2, "12": 2}, "dataanalyst": {"1": 3, "2": 3, "3": 3, "4": 2, "5": 2, "6": 2, "7": 2, "8": 2, "9": 2, "10": 2, "11": 2, "12": 2}, "aiengineer": {"1": 3, "2": 3, "3": 3, "4": 2, "5": 2, "6": 2, "7": 2, "8": 2, "9": 2, "10": 3, "11": 2, "12": 2}, "energy": {"1": 3, "2": 3, "3": 3, "4": 2, "5": 2, "6": 2, "7": 2, "8": 2, "9": 2, "10": 2, "11": 2, "12": 2}, "uiux": {"1": 3, "2": 3, "3": 2, "4": 2, "5": 3, "6": 3, "7": 2, "8": 2, "9": 3, "10": 3, "11": 2, "12": 2}, "bizdev": {"1": 2, "2": 3, "3": 2, "4": 2, "5": 3, "6": 3, "7": 3, "8": 3, "9": 3, "10": 2, "11": 2, "12": 2}, "strategy": {"1": 2, "2": 3, "3": 3, "4": 2, "5": 3, "6": 3, "7": 3, "8": 2, "9": 3, "10": 3, "11": 2, "12": 2}, "genrel": {"1": 2, "2": 3, "3": 2, "4": 2, "5": 3, "6": 3, "7": 3, "8": 3, "9": 3, "10": 2, "11": 2, "12": 2}, "marketing": {"1": 2, "2": 3, "3": 2, "4": 2, "5": 3, "6": 3, "7": 2, "8": 2, "9": 3, "10": 3, "11": 2, "12": 2}, "admin": {"1": 2, "2": 3, "3": 2, "4": 2, "5": 2, "6": 3, "7": 2, "8": 2, "9": 2, "10": 2, "11": 2, "12": 2}, "operations": {"1": 2, "2": 3, "3": 2, "4": 2, "5": 2, "6": 3, "7": 3, "8": 3, "9": 2, "10": 2, "11": 2, "12": 2}, "logistics": {"1": 2, "2": 3, "3": 2, "4": 2, "5": 2, "6": 2, "7": 2, "8": 2, "9": 2, "10": 2, "11": 2, "12": 2}};
 const STORE_KEY = 'iqarx_rsp_data_v2';
 const SESSION_KEY = 'iqarx_rsp_session';
 
@@ -755,11 +803,41 @@ function updateProgress(){
 function loadRole(id){
   currentRoleId=id;
   buildRoleList();
-  const role = ROLES.find(r=>r.id===id);
-  const saved = rspData[id]||{};
-  const wDef = {1:15,2:15,3:10,4:5,5:8,6:8,7:8,8:7,9:8,10:7,11:5,12:4};
-  const mDef = {1:3,2:3,3:2,4:2,5:3,6:3,7:2,8:2,9:3,10:2,11:2,12:2};
-  const fa = document.getElementById('form-area');
+  const role   = ROLES.find(r=>r.id===id);
+  const saved  = rspData[id]||{};
+  const isAdmin = currentUser && currentUser.isAdmin;
+  const fa     = document.getElementById('form-area');
+
+  // IDEAL defaults for this role
+  const iWDef = IDEAL_WEIGHT_DEFAULTS[id] || {1:7,2:7,3:6,4:5,5:6,6:6,7:6,8:6,9:6,10:6,11:5,12:5};
+  const iMDef = IDEAL_MIN_DEFAULTS[id]    || {1:3,2:3,3:2,4:2,5:2,6:2,7:2,8:2,9:2,10:2,11:2,12:2};
+
+  // For coach: start at 0 if never saved; for admin: start at IDEAL default
+  function wVal(a){
+    if(saved['weight_'+a] != null) return +saved['weight_'+a];
+    return isAdmin ? iWDef[a] : 0;
+  }
+  function mVal(a){
+    if(saved['min_'+a] != null) return +saved['min_'+a];
+    return isAdmin ? iMDef[a] : 1;
+  }
+
+  // Check if already submitted (one-time rule for coaches)
+  const alreadySubmitted = !isAdmin && isSubmitted(id);
+
+  // Submitted lock banner for coaches
+  const lockBanner = alreadySubmitted ? `
+  <div class="submitted-lock">
+    <div class="sl-icon">🔒</div>
+    <div>
+      <h4>This profile has already been submitted to IDEAL MENA</h4>
+      <p>You cannot resubmit unless IDEAL deletes your previous submission. Contact jkhalil@idealmena.com if you need to make changes.</p>
+    </div>
+  </div>` : '';
+
+  // Disable all inputs if already submitted
+  const dis = alreadySubmitted ? 'disabled' : '';
+  const disStyle = alreadySubmitted ? 'opacity:.6;pointer-events:none' : '';
 
   fa.innerHTML=`<div class="role-form">
 
@@ -776,43 +854,54 @@ function loadRole(id){
     </div>
   </div>
 
+  ${lockBanner}
+  <div class="form-error-banner" id="form-err-banner">⚠ Please fill in all required fields before submitting.</div>
+
+  <div style="${disStyle}">
+
   <!-- SECTION 1: SUCCESS ANCHORS -->
   <div class="sec-card">
     <div class="sec-head"><div class="sec-icon">⭐</div><div><h3>Success Anchors</h3><p>Define what this role is supposed to deliver — before thinking about any individual</p></div><div class="sec-tag">All 12 Areas</div></div>
     <div class="sec-body">
-      <div class="anchor-notice"><div class="ni">⚠️</div><p><strong>Important:</strong> Write these anchors as descriptions of the <em>role</em>, not any specific person on your team. Do not use pre-filled examples as-is — replace them with what is true for Architect X. These anchors directly calibrate every other assessment tool.</p></div>
+      <div class="anchor-notice"><div class="ni">⚠️</div><p><strong>Important:</strong> Write these anchors as descriptions of the <em>role</em>, not any specific person. All fields marked * are required.</p></div>
       <div class="field-grid">
         <div class="fg">
           <label class="fl">Core Success Anchor 1 <span>*</span></label>
-          <div class="fq">What is the most important output this role must deliver consistently? What does your team depend on this person to produce?</div>
-          <textarea class="inp" id="f-anchor1" rows="3" placeholder="Describe the primary deliverable or capability — be specific and observable">${saved.anchor1||''}</textarea>
+          <div class="fq">What is the most important output this role must deliver consistently?</div>
+          <textarea class="inp" id="f-anchor1" rows="3" placeholder="Describe the primary deliverable — be specific and observable" ${dis}>${saved.anchor1||''}</textarea>
+          <div class="field-err-msg" id="err-anchor1">This field is required.</div>
         </div>
         <div class="fg">
           <label class="fl">Core Success Anchor 2 <span>*</span></label>
-          <div class="fq">Beyond the main deliverable, what behavior or quality separates a strong performer from an average one in this role?</div>
-          <textarea class="inp" id="f-anchor2" rows="3" placeholder="Describe a secondary quality — often about how they work, not just what they produce">${saved.anchor2||''}</textarea>
+          <div class="fq">What behavior or quality separates a strong performer from an average one?</div>
+          <textarea class="inp" id="f-anchor2" rows="3" placeholder="Describe a secondary quality" ${dis}>${saved.anchor2||''}</textarea>
+          <div class="field-err-msg" id="err-anchor2">This field is required.</div>
         </div>
         <div class="fg">
-          <label class="fl">Core Success Anchor 3</label>
-          <div class="fq">If you had to name one more thing that marks a truly high-performing person in this role, what would it be?</div>
-          <textarea class="inp" id="f-anchor3" rows="3" placeholder="Third distinguishing characteristic — often about initiative, growth, or system contribution">${saved.anchor3||''}</textarea>
+          <label class="fl">Core Success Anchor 3 <span>*</span></label>
+          <div class="fq">One more thing that marks a truly high-performing person in this role?</div>
+          <textarea class="inp" id="f-anchor3" rows="3" placeholder="Third distinguishing characteristic" ${dis}>${saved.anchor3||''}</textarea>
+          <div class="field-err-msg" id="err-anchor3">This field is required.</div>
         </div>
         <div class="fg">
           <label class="fl">Critical Failure Indicator <span>*</span></label>
-          <div class="fq">What pattern, if you saw it consistently, would tell you this person is not functioning in this role — regardless of how likeable they are?</div>
-          <textarea class="inp" id="f-fail" rows="3" placeholder="Describe a specific observable pattern — not a personality trait">${saved.fail||''}</textarea>
+          <div class="fq">What pattern would tell you this person is not functioning in this role?</div>
+          <textarea class="inp" id="f-fail" rows="3" placeholder="Describe a specific observable pattern — not a personality trait" ${dis}>${saved.fail||''}</textarea>
+          <div class="field-err-msg" id="err-fail">This field is required.</div>
         </div>
       </div>
       <div class="field-grid-1" style="margin-top:16px">
         <div class="fg">
-          <label class="fl">Real Day-to-Day Expectations</label>
-          <div class="fq">What does this role actually require on a daily/weekly basis? Be honest about pace, collaboration demands, and output standards.</div>
-          <textarea class="inp" id="f-expectations" rows="3" placeholder="e.g. Daily standups, PR reviews within 24h, on-call rotation every 3 weeks, cross-team syncs twice a week...">${saved.expectations||''}</textarea>
+          <label class="fl">Real Day-to-Day Expectations <span>*</span></label>
+          <div class="fq">What does this role actually require on a daily/weekly basis?</div>
+          <textarea class="inp" id="f-expectations" rows="3" placeholder="e.g. Daily standups, PR reviews within 24h..." ${dis}>${saved.expectations||''}</textarea>
+          <div class="field-err-msg" id="err-expectations">This field is required.</div>
         </div>
         <div class="fg">
-          <label class="fl">Score 3 Benchmark — "Meets Expectations"</label>
-          <div class="fq">Describe what acceptable baseline performance looks like. This anchors the 1–5 scale so that IDEAL and all coaches score consistently.</div>
-          <textarea class="inp" id="f-benchmark3" rows="3" placeholder="e.g. Delivers assigned tasks on time with acceptable quality; participates in reviews when asked; rarely causes rework...">${saved.benchmark3||''}</textarea>
+          <label class="fl">Score 3 Benchmark <span>*</span></label>
+          <div class="fq">Describe what "meets expectations" baseline performance looks like for this role.</div>
+          <textarea class="inp" id="f-benchmark3" rows="3" placeholder="e.g. Delivers assigned tasks on time with acceptable quality..." ${dis}>${saved.benchmark3||''}</textarea>
+          <div class="field-err-msg" id="err-benchmark3">This field is required.</div>
         </div>
       </div>
     </div>
@@ -820,16 +909,37 @@ function loadRole(id){
 
   <!-- SECTION 2: AREA WEIGHTS -->
   <div class="sec-card">
-    <div class="sec-head"><div class="sec-icon">⚖️</div><div><h3>Area Weights</h3><p>How much does each of the 12 areas matter for this specific role?</p></div><div class="sec-tag">Calibration</div></div>
+    <div class="sec-head"><div class="sec-icon">⚖️</div><div><h3>Area Weights</h3><p>How much does each area matter for this specific role? Scale 1–10.</p></div><div class="sec-tag">Calibration</div></div>
     <div class="sec-body">
-      <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Higher weight = this area is more critical for fair scoring of this role. IDEAL uses these proportions when interpreting results. They do not need to sum to any specific total.</p>
+      ${isAdmin
+        ? `<div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;font-size:12px">
+            <div style="display:flex;align-items:center;gap:6px"><div style="width:28px;height:6px;border-radius:100px;background:rgba(37,99,235,0.25)"></div><span style="color:var(--muted)">IDEAL reference</span></div>
+            <div style="display:flex;align-items:center;gap:6px"><div style="width:28px;height:6px;border-radius:100px;background:var(--blue2)"></div><span style="color:var(--muted)">Coach preference</span></div>
+            <div style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:3px;background:rgba(217,119,6,0.2);border:1px solid #D97706"></div><span style="color:var(--muted)">Differs from IDEAL</span></div>
+           </div>`
+        : `<p style="font-size:12px;color:var(--muted);margin-bottom:16px">Set the importance of each area for this role (0 = not relevant, 10 = most critical). All sliders must be set above 0.</p>`
+      }
       ${AREAS.map(a=>{
-        const wv=saved[`weight_${a.num}`]!=null?saved[`weight_${a.num}`]:wDef[a.num];
+        const cv = wVal(a.num);
+        const iv = iWDef[a.num];
+        const differs = isAdmin && saved['weight_'+a.num] != null && Math.abs(cv - iv) >= 2;
+        const iBarPct = (iv/10*100).toFixed(0);
+        const cBarPct = (cv/10*100).toFixed(0);
         return `<div class="weight-row">
           <div class="wl">${a.name}<small>${a.pillar} · ${a.tool}</small></div>
           <div class="w-area">Area ${a.num}</div>
-          <input type="range" min="1" max="10" value="${wv}" id="w-${a.num}" oninput="document.getElementById('wv-${a.num}').textContent=this.value;autoSave()">
-          <div class="w-val" id="wv-${a.num}">${wv}</div>
+          <div class="w-track-wrap">
+            <div class="slider-compare-wrap">
+              ${isAdmin ? `<div class="ideal-bar-bg"><div class="ideal-bar-fill" style="width:${iBarPct}%"></div></div>` : ''}
+              <input type="range" class="w-slider${cv===0?' zero-val':''}" min="0" max="10" value="${cv}" id="w-${a.num}"
+                oninput="updateWeightSlider(${a.num},this.value,'${id}')" ${dis}>
+            </div>
+            <div class="w-compare-row">
+              ${isAdmin ? `<span class="w-ideal-badge">IDEAL: ${iv}</span>` : ''}
+              <span class="w-coach-val${differs?' differs':''}" id="wv-${a.num}">${cv}</span>
+              ${differs ? `<span style="font-size:10px;color:#D97706;font-weight:600">⚠ differs</span>` : ''}
+            </div>
+          </div>
         </div>`;
       }).join('')}
     </div>
@@ -837,18 +947,33 @@ function loadRole(id){
 
   <!-- SECTION 3: MINIMUM SCORES -->
   <div class="sec-card">
-    <div class="sec-head"><div class="sec-icon">📉</div><div><h3>Minimum Acceptable Score</h3><p>Below what score is performance a concern in this role?</p></div><div class="sec-tag">Threshold</div></div>
+    <div class="sec-head"><div class="sec-icon">📉</div><div><h3>Minimum Acceptable Score</h3><p>Scores below this threshold are flagged as development priorities.</p></div><div class="sec-tag">Threshold</div></div>
     <div class="sec-body">
-      <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Select the minimum score for each area. Scores below this are flagged as development priorities in the individual passport.</p>
+      ${isAdmin
+        ? `<p style="font-size:12px;color:var(--muted);margin-bottom:16px">Blue highlight = IDEAL reference · Amber outline = coach differs from IDEAL recommendation.</p>`
+        : `<p style="font-size:12px;color:var(--muted);margin-bottom:16px">Select the minimum acceptable score for each area (scale 1–8). All areas must be set.</p>`
+      }
       <div class="minscore-grid">
         ${AREAS.map(a=>{
-          const mv=saved[`min_${a.num}`]!=null?saved[`min_${a.num}`]:mDef[a.num];
+          const cv = mVal(a.num);
+          const iv = iMDef[a.num];
+          const maxBtn = isAdmin ? 8 : 8;
           return `<div class="ms-item">
             <div class="ms-area">Area ${a.num}</div>
             <div class="ms-name">${a.name}</div>
             <div class="ms-btns">
-              ${[1,2,3,4,5].map(v=>`<button type="button" class="ms-btn${mv==v?' sel-'+v:''}" data-area="${a.num}" data-v="${v}" onclick="setMin(${a.num},${v})">${v}</button>`).join('')}
+              ${[1,2,3,4,5,6,7,8].map(v=>{
+                const isSelected = cv==v;
+                const isIdeal = isAdmin && iv==v;
+                const differs = isAdmin && isSelected && v !== iv;
+                return `<button type="button"
+                  class="ms-btn${isSelected?' sel-'+Math.min(v,5):''}${differs?' differs-sel':''}"
+                  style="${isIdeal&&!isSelected?'box-shadow:0 0 0 2px rgba(37,99,235,0.4);background:rgba(37,99,235,0.07)':''}"
+                  data-area="${a.num}" data-v="${v}"
+                  onclick="setMin(${a.num},${v})" ${dis} title="${isIdeal?'IDEAL recommendation':''}">${v}</button>`;
+              }).join('')}
             </div>
+            ${isAdmin ? `<div class="ms-ideal-ref">IDEAL ref: ${iv}</div>` : ''}
           </div>`;
         }).join('')}
       </div>
@@ -859,21 +984,21 @@ function loadRole(id){
   <div class="sec-card">
     <div class="sec-head"><div class="sec-icon">🔗</div><div><h3>Cross-Team Dependencies</h3><p>Which teams does this role depend on, or block?</p></div><div class="sec-tag">Area 8 · NFS-ONA</div></div>
     <div class="sec-body">
-      <p style="font-size:12px;color:var(--muted);margin-bottom:16px">This directly controls which cross-functional raters are included in the BCS-360 and provides IDEAL with the structural workflow map for NFS-ONA analysis. Only mark dependencies that reflect real, regular workflow — not occasional familiarity.</p>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Only mark dependencies that reflect real, regular workflow — not occasional familiarity.</p>
       ${ALL_TEAMS.filter(t=>t!==role.team).map(t=>{
         const tk=teamKey(t);
-        const dv=saved[`dep_${tk}`]||'none';
-        const sv=saved[`depstr_${tk}`]||1;
+        const dv=saved['dep_'+tk]||'none';
+        const sv=saved['depstr_'+tk]||1;
         return `<div class="dep-row">
           <div class="dep-team">${t}</div>
-          <select class="dep-type-sel" id="dep-${tk}" onchange="autoSave()">
+          <select class="dep-type-sel" id="dep-${tk}" onchange="autoSave()" ${dis}>
             <option value="none"${dv==='none'?' selected':''}>No dependency</option>
             <option value="receives"${dv==='receives'?' selected':''}>We receive from them</option>
             <option value="sends"${dv==='sends'?' selected':''}>We send to them</option>
             <option value="bidirectional"${dv==='bidirectional'?' selected':''}>Bidirectional</option>
           </select>
           <div class="dep-strength">
-            ${[1,2,3].map(v=>`<button type="button" class="ds-btn${sv>=v?' ds-on':''}" data-team="${t}" data-v="${v}" onclick="setDepStr('${t}',${v})" title="${v===1?'Occasional':v===2?'Regular':'Critical'}">${'●'.repeat(v)}</button>`).join('')}
+            ${[1,2,3].map(v=>`<button type="button" class="ds-btn${sv>=v?' ds-on':''}" data-team="${t}" data-v="${v}" onclick="setDepStr('${t}',${v})" title="${v===1?'Occasional':v===2?'Regular':'Critical'}" ${dis}>${'●'.repeat(v)}</button>`).join('')}
           </div>
         </div>`;
       }).join('')}
@@ -882,50 +1007,69 @@ function loadRole(id){
 
   <!-- SECTION 5: COACH NOTES -->
   <div class="sec-card">
-    <div class="sec-head"><div class="sec-icon">📝</div><div><h3>Coach Notes & Sign-off</h3><p>Context for IDEAL when interpreting results for this role</p></div></div>
+    <div class="sec-head"><div class="sec-icon">📝</div><div><h3>Coach Notes & Sign-off</h3><p>Context for IDEAL when interpreting results</p></div></div>
     <div class="sec-body">
       <div class="field-grid">
         <div class="fg">
-          <label class="fl">Context for IDEAL MENA</label>
+          <label class="fl">Context for IDEAL MENA <span>*</span></label>
           <em class="fi">Role history, recent changes, team dynamics, or constraints IDEAL should know</em>
-          <textarea class="inp" id="f-notes" rows="4" placeholder="e.g. This cabin expanded recently; two members joined 3 months ago. The role is currently under-resourced...">${saved.notes||''}</textarea>
+          <textarea class="inp" id="f-notes" rows="4" placeholder="e.g. This cabin expanded recently; two members joined 3 months ago..." ${dis}>${saved.notes||''}</textarea>
+          <div class="field-err-msg" id="err-notes">This field is required.</div>
         </div>
         <div class="fg">
           <label class="fl">Coach Sign-off <span>*</span></label>
-          <em class="fi">Your name confirming this profile is accurate, honest, and approved for use in calibration</em>
-          <input class="inp" type="text" id="f-signoff" placeholder="${role.coach}" value="${saved.signoff||''}">
+          <em class="fi">Your full name confirming this profile is accurate and approved</em>
+          <input class="inp" type="text" id="f-signoff" placeholder="${role.coach}" value="${saved.signoff||''}" ${dis}>
+          <div class="field-err-msg" id="err-signoff">Please sign off before submitting.</div>
           <em class="fi" style="margin-top:4px">Date: ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})}</em>
         </div>
       </div>
     </div>
   </div>
 
+  </div><!-- /disStyle wrapper -->
+
   <!-- Submit status banner -->
   <div class="submit-banner" id="submit-banner">
     <div class="sb-icon" id="sb-icon">✅</div>
     <div class="sb-text">
       <h4 id="sb-title">Profile submitted to IDEAL MENA</h4>
-      <p id="sb-msg">Your RSP data has been received. IDEAL will use this to calibrate all assessments.</p>
+      <p id="sb-msg">Your RSP data has been received.</p>
     </div>
   </div>
 
-  <div class="btn-row">
-    <button class="btn btn-prev" onclick="navigate(-1)">← Previous</button>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div class="save-confirm" id="sc">✓ Saved locally</div>
-      <button class="btn btn-save" onclick="saveRole()">💾 Save Draft</button>
-      <button class="btn-submit-role" id="btn-submit-role" onclick="submitToSheets()">
-        📤 Submit to IDEAL
-      </button>
-    </div>
-    <button class="btn btn-next" onclick="navigate(1)">Next →</button>
-  </div>
+  <!-- SINGLE ACTION ROW: Save Draft + Submit to IDEAL only -->
+  ${alreadySubmitted
+    ? `<div style="display:flex;justify-content:center;padding:16px 0">
+        <div class="submitted-lock" style="max-width:480px;width:100%">
+          <div class="sl-icon">🔒</div>
+          <div><h4>Already submitted</h4><p>Contact IDEAL to request re-submission.</p></div>
+        </div>
+       </div>`
+    : `<div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;padding:8px 0">
+        <div class="save-confirm" id="sc">✓ Saved locally</div>
+        <button class="btn btn-save" onclick="saveRole()">💾 Save Draft</button>
+        <button class="btn-submit-role" id="btn-submit-role" onclick="validateAndSubmit()">
+          📤 Submit to IDEAL
+        </button>
+       </div>`
+  }
 
   </div>`;
 
-  fa.querySelectorAll('textarea.inp,input.inp').forEach(el=>el.addEventListener('input',autoSave));
+  fa.querySelectorAll('textarea.inp,input.inp').forEach(el=>el.addEventListener('input',()=>{ el.classList.remove('field-error'); autoSave(); }));
   fa.querySelectorAll('.dep-type-sel').forEach(el=>el.addEventListener('change',autoSave));
 }
+
+function updateWeightSlider(areaNum, val, roleId){
+  const el = document.getElementById('w-'+areaNum);
+  const vEl = document.getElementById('wv-'+areaNum);
+  if(vEl) vEl.textContent = val;
+  // Toggle zero class
+  if(el){ el.classList.toggle('zero-val', +val===0); }
+  autoSave();
+}
+
 
 // ══════════════════════════════════════════════════════════════
 // MIN / DEP HELPERS
@@ -958,7 +1102,7 @@ function gather(){
   // area weights & min scores
   AREAS.forEach(a=>{
     const w=document.getElementById('w-'+a.num);
-    if(w) d['weight_'+a.num]=+w.value;
+    if(w && !w.disabled) d['weight_'+a.num]=+w.value;
     let minVal=null;
     [1,2,3,4,5].forEach(v=>{
       const b=document.querySelector('.ms-btn[data-area="'+a.num+'"][data-v="'+v+'"]');
@@ -1030,27 +1174,12 @@ function showBanner(type, icon, title, msg){
 async function submitToSheets(){
   if(!currentRoleId) return;
 
-  // Check URL is configured
-  if(!GOOGLE_SHEETS_URL || GOOGLE_SHEETS_URL === 'PASTE_YOUR_APPS_SCRIPT_URL_HERE'){
-    showBanner('error','⚠️',
-      'Submission not configured',
-      'The IDEAL admin needs to paste the Google Apps Script URL into the HTML file before hosting it. Contact jkhalil@idealmena.com');
-    return;
-  }
-
-  // Save locally first
+  // Save locally first — always
   saveRole();
 
   const role  = ROLES.find(r=>r.id===currentRoleId);
   const saved = rspData[currentRoleId]||{};
-
-  // Validate — anchor1 is required
-  if(!saved.anchor1 || !saved.anchor1.trim()){
-    showBanner('error','⚠️',
-      'Please fill in at least Success Anchor 1',
-      'The first success anchor is required before submitting this role profile.');
-    return;
-  }
+  const btn   = document.getElementById('btn-submit-role');
 
   // Build flat payload
   const payload = {
@@ -1080,39 +1209,46 @@ async function submitToSheets(){
     payload['depstr_'+k] = saved['depstr_'+k]||'';
   });
 
-  // Update button state
-  const btn=document.getElementById('btn-submit-role');
-  if(btn){ btn.disabled=true; btn.innerHTML='<span class="spin"></span>Submitting...'; }
+  // ── If Google Sheets URL is configured → send to sheet ──────────────────
+  const hasSheets = GOOGLE_SHEETS_URL && GOOGLE_SHEETS_URL !== 'PASTE_YOUR_APPS_SCRIPT_URL_HERE';
 
-  try {
-    // Google Apps Script requires no-cors POST with FormData
-    const fd = new FormData();
-    fd.append('payload', JSON.stringify(payload));
-
-    await fetch(GOOGLE_SHEETS_URL, {
-      method: 'POST',
-      mode:   'no-cors',
-      body:   fd
-    });
-
-    // no-cors = can't read response body, but if no exception = success
-    markSubmitted(currentRoleId);
-    buildRoleList();
-    showBanner('success','✅',
-      'Submitted to IDEAL MENA — '+role.title,
-      'Your RSP for '+role.cabin+' has been received. IDEAL will use it to calibrate all assessments.');
-    if(btn){
-      btn.innerHTML='✓ Submitted';
-      btn.style.background='linear-gradient(135deg,#047857,#059669)';
+  if(hasSheets){
+    if(btn){ btn.disabled=true; btn.innerHTML='<span class="spin"></span>Submitting...'; }
+    try {
+      const fd = new FormData();
+      fd.append('payload', JSON.stringify(payload));
+      await fetch(GOOGLE_SHEETS_URL, { method:'POST', mode:'no-cors', body:fd });
+    } catch(err){
+      console.warn('Sheets send failed (saved locally):', err.message);
+      // Don't block — still mark as submitted locally
     }
-
-  } catch(err){
-    console.error('Submission error:',err);
-    showBanner('error','❌',
-      'Submission failed — please try again',
-      'Check your internet connection. If the problem persists contact jkhalil@idealmena.com — Error: '+err.message);
-    if(btn){ btn.disabled=false; btn.innerHTML='📤 Submit to IDEAL'; }
   }
+
+  // ── Always mark as submitted locally ────────────────────────────────────
+  markSubmitted(currentRoleId);
+  buildRoleList();
+
+  const msg = hasSheets
+    ? 'Your RSP for '+role.cabin+' has been saved and sent to IDEAL MENA.'
+    : 'Your RSP for '+role.cabin+' has been saved locally. IDEAL will collect it during the review session.';
+
+  showBanner('success','✅', 'Profile submitted — '+role.title, msg);
+
+  if(btn){
+    btn.innerHTML='✓ Submitted';
+    btn.style.background='linear-gradient(135deg,#047857,#059669)';
+  }
+
+  // Auto-navigate to next role after 1.5s
+  setTimeout(()=>{
+    const idx = myRoles.findIndex(r=>r.id===currentRoleId);
+    const next = myRoles[idx+1];
+    if(next){
+      loadRole(next.id);
+      // scroll to top of form
+      document.getElementById('form-area').scrollIntoView({behavior:'smooth',block:'start'});
+    }
+  }, 1500);
 }
 
 // Mark submitted roles in sidebar
@@ -1445,6 +1581,62 @@ function showDeleteToast(roleName){
     toast.style.opacity='0';
     toast.style.transform='translateX(-50%) translateY(20px)';
   },4000);
+}
+
+
+function validateAndSubmit(){
+  if(!currentRoleId) return;
+  const isAdmin = currentUser && currentUser.isAdmin;
+
+  // One-time submission check
+  if(!isAdmin && isSubmitted(currentRoleId)){
+    showBanner('error','🔒','Already submitted','This profile has already been submitted. Contact IDEAL MENA to request re-submission.');
+    return;
+  }
+
+  let valid = true;
+  const banner = document.getElementById('form-err-banner');
+  banner.classList.remove('show');
+
+  // Clear previous errors
+  document.querySelectorAll('.inp.field-error').forEach(e=>e.classList.remove('field-error'));
+  document.querySelectorAll('.field-err-msg.show').forEach(e=>e.classList.remove('show'));
+
+  // Required text fields
+  const required = ['anchor1','anchor2','anchor3','fail','expectations','benchmark3','notes','signoff'];
+  required.forEach(k=>{
+    const el = document.getElementById('f-'+k);
+    const err = document.getElementById('err-'+k);
+    if(el && !el.value.trim()){
+      el.classList.add('field-error');
+      if(err) err.classList.add('show');
+      valid = false;
+    }
+  });
+
+  // All weight sliders must be > 0 for coaches
+  if(!isAdmin){
+    AREAS.forEach(a=>{
+      const el = document.getElementById('w-'+a.num);
+      if(el && +el.value === 0){
+        el.classList.add('field-error');
+        valid = false;
+        banner.textContent = '⚠ Please set all Area Weight sliders above 0 before submitting.';
+      }
+    });
+
+    // All min scores must be set (they always are since they default to 1, so this is fine)
+  }
+
+  if(!valid){
+    if(!banner.textContent || !banner.textContent.includes('Weight')) banner.textContent='⚠ Please fill in all required fields before submitting.';
+    banner.classList.add('show');
+    banner.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+
+  // All good — proceed to submit
+  submitToSheets();
 }
 
 </script>
