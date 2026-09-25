@@ -1,0 +1,13 @@
+name: Mirror to abhani0007-stack
+on: [push, delete]
+permissions:
+  contents: read
+jobs:
+  mirror:
+    if: github.repository_owner == 'IDEALMENA'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          git clone --bare "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" src
+          cd src
+          git push --mirror "https://x-access-token:${{ secrets.MIRROR_TOKEN }}@github.com/abhani0007-stack/${{ github.event.repository.name }}.git"
